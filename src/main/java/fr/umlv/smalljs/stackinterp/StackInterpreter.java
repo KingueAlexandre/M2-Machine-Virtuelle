@@ -1,8 +1,7 @@
 package fr.umlv.smalljs.stackinterp;
 
 import static fr.umlv.smalljs.rt.JSObject.UNDEFINED;
-import static fr.umlv.smalljs.stackinterp.TagValues.decodeAnyValue;
-import static fr.umlv.smalljs.stackinterp.TagValues.encodeDictObject;
+import static fr.umlv.smalljs.stackinterp.TagValues.*;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -96,20 +95,21 @@ public final class StackInterpreter {
 		for (;;) {
 			switch (instrs[pc++]) {
 				case Instructions.CONST -> {
-					throw new UnsupportedOperationException("TODO CONST");
 					// get the constant from the instruction to the stack
-					// push(...)
+					var value = instrs[pc++];
+					push(stack, sp++, value);
 				}
 				case Instructions.LOOKUP -> {
-					throw new UnsupportedOperationException("TODO LOOKUP");
+//					throw new UnsupportedOperationException("TODO LOOKUP");
 					// find the current instruction
-					//int indexTagValue = ...
+					int indexTagValue = instrs[pc++];
 					// decode the name from the instruction
-					//String name = ...
-					// lookup the name and push as any anyValue
-					//push(...);
+					String name = (String) decodeDictObject(indexTagValue,dict);
+					// lookup the name and push as any anyValue*
+					var object = globalEnv.lookup(name);
+					push(stack, sp++, encodeAnyValue(object,dict));
 
-					//dumpStack("in lookup", stack, sp, bp, dict, heap);
+					dumpStack("in lookup", stack, sp, bp, dict, heap);
 				}
 				case Instructions.REGISTER -> {
 					throw new UnsupportedOperationException("TODO REGISTER");
@@ -247,27 +247,27 @@ public final class StackInterpreter {
 					// dumpStack(">end funcall dump", stack, sp, bp, dict, heap);
 				}
 				case Instructions.RET -> {
-					throw new UnsupportedOperationException("TODO RET");
+//					throw new UnsupportedOperationException("TODO RET");
 					// DEBUG
-					//dumpStack("> start ret dump", stack, sp, bp, dict, heap);
+					dumpStack("> start ret dump", stack, sp, bp, dict, heap);
 
 					// get the return value from the top of the stack
-					//int result = ...
+					int result = pop(stack,--sp);
 
-					//System.err.println("ret " + decodeAnyValue(result, dict, heap));
+					System.err.println("ret " + decodeAnyValue(result, dict, heap));
 
 					// find activation and restore pc
-					//int activation = ...
-					//pc = ...
-					//if (pc == 0) {
-					// end of the interpreter
-					//	return decodeAnyValue(result, dict, heap);
-					//}
+					int activation = code.slotCount() + bp;
+					pc = stack[activation+PC_OFFSET];
+					if (pc == 0) {
+//					 end of the interpreter
+						return decodeAnyValue(result, dict, heap);
+					}
 
 					// restore sp, function and bp
-					//sp = ...;
-					//function = (JSObject) ...;
-					//bp = ...;
+//					sp = sp;
+//					function = (JSObject) ...;
+//					bp = ...;
 
 					// restore code and instrs
 					//code = (Code) ...;
@@ -277,7 +277,7 @@ public final class StackInterpreter {
 					//push(...);
 
 					// DEBUG
-					// dumpStack("> end ret dump", stack, sp, bp, dict, heap);
+//					 dumpStack("> end ret dump", stack, sp, bp, dict, heap);
 				}
 				case Instructions.GOTO -> {
 					throw new UnsupportedOperationException("TODO GOTO");
